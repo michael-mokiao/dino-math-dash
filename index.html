@@ -1,0 +1,877 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>Dino Math Dash</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --card:#ffffff;
+    --card-border:#e4e8ee;
+    --accent:#ffc233;
+    --accent-text:#3a2c00;
+    --accent2:#2fabd6;
+    --good:#2ea94e;
+    --bad:#e5484d;
+    --text:#1c2530;
+    --sub:#6b7684;
+    --track:#eef1f5;
+    --shadow: 0 4px 16px rgba(20,30,45,0.08);
+    font-size: 16px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    font-family: 'Trebuchet MS', 'Segoe UI', Verdana, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x:hidden;
+  }
+  #app{
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding: 18px;
+  }
+  .screen{
+    width:100%;
+    max-width: 560px;
+    background: var(--card);
+    border-radius: 18px;
+    box-shadow: var(--shadow);
+    padding: 26px 22px 30px;
+    position:relative;
+    animation: screenIn .35s ease;
+    border: 1px solid var(--card-border);
+  }
+  @keyframes screenIn{
+    from{ opacity:0; transform: translateY(8px); }
+    to{ opacity:1; transform: translateY(0); }
+  }
+  .screen.leaving{
+    animation: screenOut .22s ease-in forwards;
+  }
+  @keyframes screenOut{
+    from{ opacity:1; transform: translateY(0); }
+    to{ opacity:0; transform: translateY(-8px); }
+  }
+  h1.title{
+    text-align:center;
+    margin: 4px 0 2px;
+    font-size: 2rem;
+    letter-spacing: .5px;
+  }
+  h1.title span{ color: var(--accent); }
+  .subtitle{
+    text-align:center;
+    color: var(--sub);
+    margin-bottom: 22px;
+    font-size: .95rem;
+  }
+  .section-label{
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--sub);
+    margin: 18px 0 10px;
+    font-weight:bold;
+  }
+  /* ---- question count slider ---- */
+  .count-box{
+    background: var(--track);
+    border-radius: 16px;
+    padding: 16px 18px 20px;
+  }
+  .count-value{
+    text-align:center;
+    font-size: 2.6rem;
+    font-weight:bold;
+    color: var(--accent2);
+    transition: transform .15s ease;
+  }
+  .count-value.bump{ transform: scale(1.18); }
+  input[type=range]{
+    width:100%;
+    height: 10px;
+    border-radius: 6px;
+    background: #dbe1e8;
+    appearance:none; -webkit-appearance:none;
+    outline:none;
+    margin-top: 8px;
+    accent-color: var(--accent2);
+  }
+  input[type=range]::-webkit-slider-thumb{
+    appearance:none; -webkit-appearance:none;
+    width: 24px; height:24px;
+    border-radius:50%;
+    background: var(--accent2);
+    border: 3px solid #ffffff;
+    cursor:pointer;
+    box-shadow: 0 1px 4px rgba(20,30,45,0.35);
+  }
+  input[type=range]::-moz-range-thumb{
+    width: 24px; height:24px;
+    border-radius:50%;
+    background: var(--accent2);
+    border: 3px solid #ffffff;
+    cursor:pointer;
+  }
+  .tick-row{
+    display:flex; justify-content:space-between;
+    color: var(--sub); font-size: .7rem; margin-top:6px;
+    padding: 0 4px;
+  }
+  /* ---- difficulty cards ---- */
+  .diff-row{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .diff-card{
+    background: var(--track);
+    border: 2px solid transparent;
+    border-radius: 16px;
+    padding: 14px 10px;
+    text-align:center;
+    cursor:pointer;
+    transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    user-select:none;
+  }
+  .diff-card:active{ transform: scale(.96); }
+  .diff-card.selected{
+    border-color: var(--accent);
+    background: #fff6e0;
+    transform: translateY(-3px);
+  }
+  .diff-emoji{ font-size: 1.9rem; }
+  .diff-name{ font-weight:bold; margin-top:4px; font-size:1.05rem; }
+  .diff-desc{ font-size: .72rem; color: var(--sub); margin-top: 4px; line-height:1.3; }
+  /* ---- color picker ---- */
+  .color-row{
+    display:flex; gap:12px; justify-content:center; flex-wrap:wrap;
+    padding: 4px 0 2px;
+  }
+  .color-swatch{
+    width:34px; height:34px;
+    border-radius:50%;
+    border: 3px solid var(--card-border);
+    cursor:pointer;
+    padding:0;
+    transition: transform .15s ease, border-color .15s ease;
+  }
+  .color-swatch:active{ transform: scale(.9); }
+  .color-swatch.selected{
+    border-color: var(--text);
+    transform: scale(1.12);
+  }
+  .start-btn{
+    display:block;
+    width:100%;
+    margin-top: 26px;
+    padding: 16px;
+    font-size: 1.2rem;
+    font-weight:bold;
+    letter-spacing: .5px;
+    border:none;
+    border-radius: 14px;
+    background: var(--accent);
+    color: var(--accent-text);
+    cursor:pointer;
+    box-shadow: 0 4px 0 #c99a1f;
+    transition: transform .1s ease, box-shadow .1s ease;
+  }
+  .start-btn:active{
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #c99a1f;
+  }
+  .start-btn:disabled{
+    opacity:.5; cursor:not-allowed;
+    box-shadow:none; transform:none;
+  }
+
+  /* ---- GAME SCREEN ---- */
+  .hud-row{
+    display:flex; justify-content:space-between; align-items:center;
+    margin-bottom: 10px; font-size: .85rem; color: var(--sub);
+  }
+  .hud-row b{ color: var(--text); }
+
+  .track-wrap{
+    background: var(--track);
+    border-radius: 12px;
+    padding: 10px 8px;
+    margin-bottom: 8px;
+    position:relative;
+    overflow:hidden;
+    border: 1px solid var(--card-border);
+  }
+  .track{
+    position:relative;
+    height: 46px;
+    margin: 6px 0;
+    background: #e3e8ee;
+    border-radius: 8px;
+    border-bottom: 3px dashed #c7cfd9;
+  }
+  .track:last-child{ margin-bottom:0; }
+  .flag{
+    position:absolute; right:2px; top:-8px; font-size:1.2rem;
+    filter: drop-shadow(1px 1px 0 rgba(0,0,0,.5));
+  }
+  .track-label{
+    position:absolute; left:2px; top:-16px;
+    font-size:.68rem; color:var(--sub); letter-spacing:.5px; text-transform:uppercase;
+  }
+  .dino-pos{
+    position:absolute;
+    left:0; bottom:2px;
+    transition: left .35s cubic-bezier(.34,1.4,.64,1);
+    transform: translateX(0);
+  }
+  .dino-pos.timer-dino{ transition: left .12s linear; }
+
+  /* pixel dino sprite */
+  .dino{
+    position:relative;
+    width:42.5px; height:47.5px;
+    image-rendering: pixelated;
+    animation: bob .4s steps(2) infinite;
+  }
+  @keyframes bob{
+    0%,100%{ transform: translateY(0); }
+    50%{ transform: translateY(-2px); }
+  }
+  .px{ position:absolute; }
+  .leg{ animation: legrun .28s steps(1) infinite; }
+  .leg.leg2{ animation-delay:.14s; }
+  @keyframes legrun{
+    0%{ transform: scaleY(1) translateY(0); }
+    50%{ transform: scaleY(.55) translateY(3px); }
+    100%{ transform: scaleY(1) translateY(0); }
+  }
+
+  .timer-text{
+    text-align:center; font-size:.85rem; color: var(--sub); margin-top:2px;
+  }
+
+  .qcard{
+    background: var(--track);
+    border-radius: 18px;
+    padding: 26px 16px 22px;
+    margin-top: 14px;
+    text-align:center;
+  }
+  .qcount{ color: var(--sub); font-size: .8rem; margin-bottom: 6px; letter-spacing:1px; }
+  .question{
+    font-size: 3rem;
+    font-weight:bold;
+    letter-spacing: 1px;
+    color: var(--text);
+  }
+  .answer-form{
+    margin-top: 20px;
+    display:flex;
+    gap:10px;
+  }
+  .answer-input{
+    flex:1;
+    font-size: 1.6rem;
+    text-align:center;
+    padding: 12px 8px;
+    border-radius: 12px;
+    border: 2px solid var(--card-border);
+    background: #ffffff;
+    color: var(--text);
+    outline:none;
+    transition: border-color .15s ease;
+  }
+  .answer-input:focus{ border-color: var(--accent2); }
+  .answer-input.wrong{ animation: shake .28s; }
+  @keyframes shake{
+    0%,100%{ transform: translateX(0); }
+    20%{ transform: translateX(-8px); }
+    40%{ transform: translateX(8px); }
+    60%{ transform: translateX(-6px); }
+    80%{ transform: translateX(6px); }
+  }
+  .submit-btn{
+    padding: 0 20px;
+    border:none;
+    border-radius: 12px;
+    background: var(--accent2);
+    color: #ffffff;
+    font-weight:bold;
+    font-size: 1rem;
+    cursor:pointer;
+    box-shadow: 0 4px 0 #1f85a8;
+  }
+  .submit-btn:active{ transform: translateY(3px); box-shadow: 0 0 0 #1f85a8; }
+
+  /* ---- END SCREENS ---- */
+  .fw-pixel{
+    position:absolute;
+    width:6px; height:6px;
+    image-rendering: pixelated;
+  }
+  .again-btn{
+    display:block; width:100%; padding:16px; font-size:1.15rem; font-weight:bold;
+    border:none; border-radius:14px; cursor:pointer; letter-spacing:.5px;
+    background: var(--accent);
+    color: var(--accent-text);
+    box-shadow: 0 4px 0 #c99a1f;
+  }
+  .again-btn:active{ transform: translateY(4px); box-shadow: 0 0 0 #c99a1f; }
+
+  /* ---- WIN SCREEN (full-viewport) ---- */
+  .screen.win-full{
+    position:fixed;
+    inset:0;
+    width:100%; height:100%;
+    max-width:none;
+    margin:0;
+    border-radius:0;
+    border:none;
+    box-shadow:none;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#1c2530;
+    overflow:hidden;
+  }
+  .fw-full{ position:absolute; inset:0; }
+  .win-content{
+    position:relative; z-index:2;
+    display:flex; flex-direction:column; align-items:center; gap:32px;
+  }
+  .win-text{
+    font-size: clamp(2.6rem, 11vw, 5.5rem);
+    font-weight:bold;
+    color:#ffffff;
+    text-align:center;
+    letter-spacing:1px;
+  }
+  .win-again-btn{ width:auto; display:inline-block; padding:14px 34px; }
+
+  /* ---- LOSE SCREEN (full-viewport, white, minimal) ---- */
+  .screen.lose-full{
+    position:fixed;
+    inset:0;
+    width:100%; height:100%;
+    max-width:none;
+    margin:0;
+    border-radius:0;
+    border:none;
+    box-shadow:none;
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#ffffff;
+  }
+  .lose-content{
+    display:flex; flex-direction:column; align-items:center; gap:32px;
+  }
+  .lose-text{
+    font-size: clamp(2.6rem, 11vw, 5.5rem);
+    font-weight:bold;
+    color: var(--bad);
+    text-align:center;
+    letter-spacing:1px;
+  }
+  .lose-again-btn{ width:auto; display:inline-block; padding:14px 34px; }
+
+  .hidden{ display:none !important; }
+
+  @media (max-width: 400px){
+    .question{ font-size: 2.3rem; }
+    h1.title{ font-size: 1.6rem; }
+    .diff-desc{ font-size:.66rem; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  const app = document.getElementById('app');
+
+  // ---------------- Pixel Dinosaur sprite (upright, styled after the pixelated Chrome "no internet" T-Rex) ----------------
+  // Grid map: '.' empty, 'B' body (colorable), 'P' eye pixel (fixed dark), 'M' back leg, 'N' front leg (M/N alternate for the run cycle)
+  const DINO_MAP = [
+    ".........BBBBBB..",
+    ".........BBBPBB..",
+    ".........BBBBBB..",
+    ".........BBBBBB..",
+    ".........BBBBBBB.",
+    ".......BBBBBBBBB.",
+    ".......BBBBBB....",
+    ".....BBBBBBBB....",
+    ".BB.BBBBBBBB.....",
+    "BBBBBBBBBBBB.....",
+    "BBBBBBBBBBBB.....",
+    "....BBBBBBBB.....",
+    "....BBBBBBBB.....",
+    "....BBBBBBBB.....",
+    "....MMM..NNN.....",
+    "....MMM..NNN.....",
+    "....MMM..NNN.....",
+    "....MMM..NNN.....",
+    "...MMMM..NNNN...."
+  ];
+  const EYE_COLOR = '#1c2530';
+  const PXS = 2.5; // pixel size in px
+
+  const DINO_COLOR_OPTIONS = [
+    { id:'green',  hex:'#3fbf5f' },
+    { id:'blue',   hex:'#2fabd6' },
+    { id:'purple', hex:'#9b6fe0' },
+    { id:'orange', hex:'#f0973f' },
+    { id:'pink',   hex:'#f06fa0' },
+    { id:'yellow', hex:'#e0c23f' }
+  ];
+  const TIMER_DINO_COLOR = '#e5484d'; // fixed "danger" color for the chasing timer T-Rex
+
+  function buildDino(color){
+    const bodyColor = color || DINO_COLOR_OPTIONS[0].hex;
+    const wrap = document.createElement('div');
+    wrap.className = 'dino';
+    DINO_MAP.forEach((row,ry)=>{
+      [...row].forEach((ch,rx)=>{
+        if(ch === '.') return;
+        const d = document.createElement('div');
+        d.className = 'px';
+        d.style.left = (rx*PXS)+'px';
+        d.style.top = (ry*PXS)+'px';
+        d.style.width = PXS+'px';
+        d.style.height = PXS+'px';
+        d.style.background = ch === 'P' ? EYE_COLOR : bodyColor;
+        if(ch === 'M') d.classList.add('leg');
+        if(ch === 'N') d.classList.add('leg', 'leg2');
+        wrap.appendChild(d);
+      });
+    });
+    return wrap;
+  }
+
+  // ---------------- State ----------------
+  let state = {
+    numQuestions: 20,
+    difficulty: null, // 'parker' | 'shaine'
+    dinoColor: DINO_COLOR_OPTIONS[0].hex,
+    questions: [],
+    currentIndex: 0,
+    answered: 0,
+    totalTimeMs: 0,
+    startTime: 0,
+    timerId: null,
+    finished: false
+  };
+
+  const DIFF = {
+    parker: { label:'Parker', secPerQ:10, emoji:'🦕', desc:'10s / question · Addition only · 1–5' },
+    shaine: { label:'Shaine', secPerQ:2, emoji:'🦖', desc:'2s / question · +  −  ×  / · 1–12' }
+  };
+
+  // ---------------- Audio (small synthesized tones, no external files) ----------------
+  let actx = null;
+  function tone(freq, delay, dur, type, glideTo){
+    try{
+      if(!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      const t0 = actx.currentTime + delay;
+      const o = actx.createOscillator();
+      const g = actx.createGain();
+      o.type = type || 'sine';
+      o.frequency.setValueAtTime(freq, t0);
+      if(glideTo) o.frequency.exponentialRampToValueAtTime(glideTo, t0 + dur);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.09, t0 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(actx.destination);
+      o.start(t0);
+      o.stop(t0 + dur + 0.02);
+    }catch(e){}
+  }
+  function playClickSound(){ tone(440, 0, 0.05, 'triangle'); }
+  // Correct: bright two-note upward chime
+  function playCorrectSound(){
+    tone(523.25, 0, 0.11, 'sine');
+    tone(783.99, 0.1, 0.18, 'sine');
+  }
+  // Incorrect: single low descending buzz, clearly distinct timbre/pitch
+  function playIncorrectSound(){
+    tone(220, 0, 0.24, 'square', 100);
+  }
+
+  // ---------------- Question generation ----------------
+  function randInt(min,max){ return Math.floor(Math.random()*(max-min+1))+min; }
+
+  function genQuestionParker(){
+    const a = randInt(1,5), b = randInt(1,5);
+    return { text: `${a} + ${b}`, answer: a+b };
+  }
+  function genQuestionShaine(){
+    const ops = ['+','-','×','/'];
+    const op = ops[randInt(0,3)];
+    let a,b,answer;
+    if(op === '+'){
+      a = randInt(1,12); b = randInt(1,12); answer = a+b;
+    } else if(op === '-'){
+      a = randInt(1,12); b = randInt(1,12);
+      if(b > a){ const t=a; a=b; b=t; }
+      answer = a-b;
+    } else if(op === '×'){
+      a = randInt(1,12); b = randInt(1,12); answer = a*b;
+    } else {
+      b = randInt(1,12); answer = randInt(1,12); a = b*answer;
+    }
+    return { text: `${a} ${op} ${b}`, answer };
+  }
+
+  function buildQuestions(n, diff){
+    const gen = diff === 'parker' ? genQuestionParker : genQuestionShaine;
+    const list = [];
+    for(let i=0;i<n;i++) list.push(gen());
+    return list;
+  }
+
+  // ---------------- Screen transition helper ----------------
+  function renderScreen(buildFn){
+    const old = app.querySelector('.screen');
+    if(old){
+      old.classList.add('leaving');
+      setTimeout(()=>{ old.remove(); mount(buildFn); }, 260);
+    } else {
+      mount(buildFn);
+    }
+  }
+  function mount(buildFn){
+    const el = buildFn();
+    el.classList.add('screen');
+    app.appendChild(el);
+  }
+
+  // ---------------- MENU SCREEN ----------------
+  function MenuScreen(){
+    const el = document.createElement('div');
+
+    el.innerHTML = `
+      <h1 class="title">🦖 Dino Math <span>Dash</span></h1>
+      <p class="subtitle">Answer every question before the timer dino catches you!</p>
+
+      <div class="section-label">Number of Questions</div>
+      <div class="count-box">
+        <div class="count-value" id="countVal">20</div>
+        <input type="range" id="countSlider" min="5" max="50" step="5" value="20">
+        <div class="tick-row"><span>5</span><span>50</span></div>
+      </div>
+
+      <div class="section-label">Difficulty</div>
+      <div class="diff-row" id="diffRow">
+        <div class="diff-card" data-diff="parker">
+          <div class="diff-emoji">🦕</div>
+          <div class="diff-name">Parker</div>
+          <div class="diff-desc">${DIFF.parker.desc}</div>
+        </div>
+        <div class="diff-card" data-diff="shaine">
+          <div class="diff-emoji">🦖</div>
+          <div class="diff-name">Shaine</div>
+          <div class="diff-desc">${DIFF.shaine.desc}</div>
+        </div>
+      </div>
+
+      <div class="section-label">T-Rex Color</div>
+      <div class="color-row" id="colorRow">
+        ${DINO_COLOR_OPTIONS.map(c => `<button type="button" class="color-swatch${c.hex === state.dinoColor ? ' selected' : ''}" data-color="${c.hex}" style="background:${c.hex}" aria-label="${c.id}"></button>`).join('')}
+      </div>
+
+      <button class="start-btn" id="startBtn" disabled>Select a Difficulty</button>
+    `;
+
+    const slider = el.querySelector('#countSlider');
+    const countVal = el.querySelector('#countVal');
+    slider.addEventListener('input', ()=>{
+      state.numQuestions = parseInt(slider.value,10);
+      countVal.textContent = state.numQuestions;
+      countVal.classList.remove('bump');
+      void countVal.offsetWidth;
+      countVal.classList.add('bump');
+    });
+
+    const swatches = el.querySelectorAll('.color-swatch');
+    swatches.forEach(s=>{
+      s.addEventListener('click', ()=>{
+        swatches.forEach(x=>x.classList.remove('selected'));
+        s.classList.add('selected');
+        state.dinoColor = s.dataset.color;
+        playClickSound();
+      });
+    });
+
+    const cards = el.querySelectorAll('.diff-card');
+    const startBtn = el.querySelector('#startBtn');
+    cards.forEach(c=>{
+      c.addEventListener('click', ()=>{
+        cards.forEach(x=>x.classList.remove('selected'));
+        c.classList.add('selected');
+        state.difficulty = c.dataset.diff;
+        startBtn.disabled = false;
+        startBtn.textContent = `Start Race →`;
+        playClickSound();
+      });
+    });
+
+    startBtn.addEventListener('click', ()=>{
+      if(!state.difficulty) return;
+      startGame();
+    });
+
+    return el;
+  }
+
+  // ---------------- GAME SCREEN ----------------
+  let gameRefs = {};
+
+  function GameScreen(){
+    const el = document.createElement('div');
+    el.innerHTML = `
+      <div class="hud-row">
+        <span>Question <b id="qNum">1</b> / ${state.numQuestions}</span>
+        <span id="diffTag">${DIFF[state.difficulty].emoji} ${DIFF[state.difficulty].label}</span>
+      </div>
+
+      <div class="track-wrap">
+        <div class="track">
+          <div class="track-label">You</div>
+          <span class="flag">🏁</span>
+          <div class="dino-pos" id="progressDinoPos"></div>
+        </div>
+        <div class="track">
+          <div class="track-label">Timer</div>
+          <span class="flag">⏰</span>
+          <div class="dino-pos timer-dino" id="timerDinoPos"></div>
+        </div>
+      </div>
+      <div class="timer-text" id="timerText">Time left: --</div>
+
+      <div class="qcard" id="qcard">
+        <div class="qcount">SOLVE IT!</div>
+        <div class="question" id="questionText">? + ?</div>
+        <form class="answer-form" id="answerForm" autocomplete="off">
+          <input class="answer-input" id="answerInput" type="tel" inputmode="numeric" pattern="-?[0-9]*" placeholder="?" autofocus>
+          <button class="submit-btn" type="submit">✔</button>
+        </form>
+      </div>
+    `;
+
+    const progressDinoPos = el.querySelector('#progressDinoPos');
+    const timerDinoPos = el.querySelector('#timerDinoPos');
+    progressDinoPos.appendChild(buildDino(state.dinoColor));
+    timerDinoPos.appendChild(buildDino(TIMER_DINO_COLOR));
+
+    gameRefs = {
+      qNum: el.querySelector('#qNum'),
+      questionText: el.querySelector('#questionText'),
+      answerInput: el.querySelector('#answerInput'),
+      answerForm: el.querySelector('#answerForm'),
+      qcard: el.querySelector('#qcard'),
+      progressDinoPos,
+      timerDinoPos,
+      timerText: el.querySelector('#timerText'),
+      trackWrap: el.querySelector('.track-wrap')
+    };
+
+    gameRefs.answerForm.addEventListener('submit', (e)=>{
+      e.preventDefault();
+      submitAnswer();
+    });
+
+    setTimeout(()=> gameRefs.answerInput.focus(), 50);
+
+    return el;
+  }
+
+  function trackWidth(){
+    // usable travel distance = track width minus dino width(~43)
+    const trackEl = gameRefs.trackWrap.querySelector('.track');
+    return Math.max(trackEl.clientWidth - 48, 40);
+  }
+
+  function updateQuestionUI(){
+    const q = state.questions[state.currentIndex];
+    gameRefs.qNum.textContent = state.currentIndex + 1;
+    gameRefs.questionText.textContent = q.text + ' = ?';
+    gameRefs.answerInput.value = '';
+    gameRefs.answerInput.classList.remove('wrong');
+  }
+
+  function updateProgressDino(){
+    const pct = state.answered / state.numQuestions;
+    const px = pct * trackWidth();
+    gameRefs.progressDinoPos.style.left = px + 'px';
+  }
+
+  function updateTimerDino(elapsedMs){
+    const pct = Math.min(elapsedMs / state.totalTimeMs, 1);
+    const px = pct * trackWidth();
+    gameRefs.timerDinoPos.style.left = px + 'px';
+    const remainingSec = Math.max(0, Math.ceil((state.totalTimeMs - elapsedMs)/1000));
+    gameRefs.timerText.textContent = `Time left: ${remainingSec}s`;
+  }
+
+  function submitAnswer(){
+    if(state.finished) return;
+    const val = gameRefs.answerInput.value.trim();
+    if(val === '') return;
+    const q = state.questions[state.currentIndex];
+    const correct = parseInt(val,10) === q.answer;
+
+    if(correct){
+      playCorrectSound();
+      state.answered++;
+      updateProgressDino();
+
+      if(state.answered >= state.numQuestions){
+        finishGame(true);
+        return;
+      }
+      state.currentIndex++;
+      updateQuestionUI();
+      gameRefs.answerInput.focus();
+    } else {
+      playIncorrectSound();
+      gameRefs.answerInput.classList.add('wrong');
+      setTimeout(()=>{
+        gameRefs.answerInput.classList.remove('wrong');
+        gameRefs.answerInput.value = '';
+        gameRefs.answerInput.focus();
+      }, 300);
+    }
+  }
+
+  function startGame(){
+    state.questions = buildQuestions(state.numQuestions, state.difficulty);
+    state.currentIndex = 0;
+    state.answered = 0;
+    state.finished = false;
+    state.totalTimeMs = state.numQuestions * DIFF[state.difficulty].secPerQ * 1000;
+
+    renderScreen(GameScreen);
+
+    setTimeout(()=>{
+      updateQuestionUI();
+      updateProgressDino();
+      state.startTime = performance.now();
+      if(state.timerId) clearInterval(state.timerId);
+      state.timerId = setInterval(gameTick, 100);
+      gameTick();
+    }, 300);
+  }
+
+  function gameTick(){
+    if(state.finished) return;
+    const elapsed = performance.now() - state.startTime;
+    updateTimerDino(elapsed);
+    if(elapsed >= state.totalTimeMs){
+      finishGame(false);
+    }
+  }
+
+  function finishGame(won){
+    if(state.finished) return;
+    state.finished = true;
+    if(state.timerId){ clearInterval(state.timerId); state.timerId = null; }
+    setTimeout(()=>{
+      renderScreen(()=> won ? WinScreen() : LoseScreen());
+    }, 250);
+  }
+
+  // ---------------- WIN SCREEN ----------------
+  function WinScreen(){
+    const el = document.createElement('div');
+    el.classList.add('win-full');
+    el.innerHTML = `
+      <div class="fw-full" id="fwWrap"></div>
+      <div class="win-content">
+        <div class="win-text">You Win!</div>
+        <button class="again-btn win-again-btn" id="againBtn">Play Again</button>
+      </div>
+    `;
+    const wrap = el.querySelector('#fwWrap');
+    launchFireworks(wrap);
+    el.querySelector('#againBtn').addEventListener('click', resetToMenu);
+    return el;
+  }
+
+  const FW_COLORS = ['#ffd25a','#5ad1ff','#5be07a','#ff6161','#ff9ef0','#ffffff'];
+
+  function launchFireworks(container){
+    let running = true;
+    function burstOnce(){
+      if(!running) return;
+      const cx = randInt(20, container.clientWidth-20 || 200);
+      const cy = randInt(20, container.clientHeight-30 || 80);
+      const color = FW_COLORS[randInt(0,FW_COLORS.length-1)];
+      const count = 14;
+      for(let i=0;i<count;i++){
+        const angle = (Math.PI*2*i)/count;
+        const dist = randInt(30,60);
+        const p = document.createElement('div');
+        p.className = 'fw-pixel';
+        p.style.left = cx+'px';
+        p.style.top = cy+'px';
+        p.style.background = color;
+        container.appendChild(p);
+        const dx = Math.cos(angle)*dist;
+        const dy = Math.sin(angle)*dist;
+        p.animate([
+          { transform:'translate(0,0)', opacity:1 },
+          { transform:`translate(${dx}px, ${dy}px)`, opacity:0 }
+        ], { duration: 700 + randInt(0,300), easing:'cubic-bezier(.2,.7,.4,1)' });
+        setTimeout(()=> p.remove(), 1100);
+      }
+    }
+    burstOnce();
+    const iv = setInterval(burstOnce, 550);
+    // stop generating new bursts if screen removed
+    const obs = new MutationObserver(()=>{
+      if(!document.body.contains(container)){
+        running = false;
+        clearInterval(iv);
+        obs.disconnect();
+      }
+    });
+    obs.observe(document.body, {childList:true, subtree:true});
+  }
+
+  // ---------------- LOSE SCREEN ----------------
+  function LoseScreen(){
+    const el = document.createElement('div');
+    el.classList.add('lose-full');
+    el.innerHTML = `
+      <div class="lose-content">
+        <div class="lose-text">You Lose!</div>
+        <button class="again-btn lose-again-btn" id="againBtn">Play Again</button>
+      </div>
+    `;
+    el.querySelector('#againBtn').addEventListener('click', resetToMenu);
+    return el;
+  }
+
+  function resetToMenu(){
+    state.difficulty = null;
+    renderScreen(MenuScreen);
+  }
+
+  // ---------------- Init ----------------
+  mount(MenuScreen);
+
+})();
+</script>
+</body>
+</html>

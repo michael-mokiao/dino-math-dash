@@ -381,6 +381,12 @@
     text-align:center;
     letter-spacing:1px;
   }
+  .lose-score{
+    font-size: 1.15rem;
+    color: var(--sub);
+    text-align:center;
+  }
+  .lose-score b{ color: var(--text); }
   .lose-again-btn{ width:auto; display:inline-block; padding:14px 34px; }
 
   .hidden{ display:none !important; }
@@ -856,6 +862,7 @@
     el.innerHTML = `
       <div class="lose-content">
         <div class="lose-text">You Lose!</div>
+        <div class="lose-score">You got <b>${state.answered}</b> out of <b>${state.numQuestions}</b> right</div>
         <button class="again-btn lose-again-btn" id="againBtn">Play Again</button>
       </div>
     `;
